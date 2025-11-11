@@ -1,6 +1,10 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import MediCoreLanding from './components/MedicoreLanding';
+import PatientProfilePage from './components/PatientProfilePage';
+import SettingsPage from './components/SettingsPage';
+import MedicalRecordsPage from './components/MedicalRecordsPage';
 
 // Auth Components
 import Login from './components/auth/Login';
@@ -20,7 +24,6 @@ import Appointments from './components/shared/Appointments';
 import Patients from './components/shared/Patients';
 import Billing from './components/shared/Billing';
 import Inventory from './components/shared/Inventory';
-
 // Protected Route Component
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user, loading } = useAuth();
@@ -83,6 +86,10 @@ function AppRoutes() {
   return (
     <Routes>
       {/* Public Routes */}
+      <Route
+        path="/"
+        element={<MediCoreLanding />}
+      />
       <Route
         path="/login"
         element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />}
@@ -159,10 +166,7 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <MainLayout>
-              <div className="p-8">
-                <h1 className="text-2xl font-bold">Medical Records</h1>
-                <p className="text-gray-500 mt-2">Coming soon...</p>
-              </div>
+              <MedicalRecordsPage />
             </MainLayout>
           </ProtectedRoute>
         }
@@ -195,10 +199,7 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <MainLayout>
-              <div className="p-8">
-                <h1 className="text-2xl font-bold">My Profile</h1>
-                <p className="text-gray-500 mt-2">Coming soon...</p>
-              </div>
+              <PatientProfilePage />
             </MainLayout>
           </ProtectedRoute>
         }
@@ -209,10 +210,7 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <MainLayout>
-              <div className="p-8">
-                <h1 className="text-2xl font-bold">Settings</h1>
-                <p className="text-gray-500 mt-2">Coming soon...</p>
-              </div>
+              <SettingsPage />
             </MainLayout>
           </ProtectedRoute>
         }
