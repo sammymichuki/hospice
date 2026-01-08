@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 
 const MediCoreLanding = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -220,18 +221,18 @@ const MediCoreLanding = () => {
             </div>
             
             <div className="hidden md:flex items-center gap-4">
-              <a
-                href="/login"
+              <Link
+                onClick={() => window.location.href = '/login'}
                 className="px-6 py-2 rounded-full font-medium text-blue-600 border-2 border-blue-600 hover:bg-blue-600 hover:text-white transition"
               >
                 Login
-              </a>
-              <a
-                href="/register"
+              </Link>
+              <Link
+                onClick={() => window.location.href = '/register'}
                 className="px-6 py-2 rounded-full font-medium text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:shadow-lg hover:-translate-y-0.5 transition"
               >
                 Register
-              </a>
+              </Link>
             </div>
             
             <button className="md:hidden text-2xl text-blue-600">

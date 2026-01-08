@@ -5,6 +5,8 @@ import MediCoreLanding from './components/MedicoreLanding';
 import PatientProfilePage from './components/PatientProfilePage';
 import SettingsPage from './components/SettingsPage';
 import MedicalRecordsPage from './components/MedicalRecordsPage';
+import ForgotPassword from './components/auth/ForgotPassword';
+import ResetPassword from './components/auth/ResetPassword';
 
 // Auth Components
 import Login from './components/auth/Login';
@@ -98,7 +100,14 @@ function AppRoutes() {
         path="/register"
         element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Register />}
       />
-
+      <Route
+        path="/forgot-password"
+        element={<ForgotPassword />}
+      />
+      <Route
+        path="/reset-password"
+        element={<ResetPassword />}
+      />
       {/* Protected Routes */}
       <Route
         path="/dashboard"
