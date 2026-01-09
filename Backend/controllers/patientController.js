@@ -141,7 +141,13 @@ exports.createPatient = async (req, res) => {
 exports.updatePatient = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, phone, dateOfBirth, gender, bloodGroup, address, emergencyContact, medicalHistory, allergies } = req.body;
+    const {
+      firstName, lastName, email, phone, dateOfBirth, gender, bloodGroup, address,
+      emergencyContactName, emergencyContactPhone, emergencyContactRelation,
+      allergies, chronicConditions
+    } = req.body;
+
+    const loggedInUser = req.user; // User object from authentication middleware
 
     const patient = await Patient.findByPk(id);
     if (!patient) {
@@ -151,22 +157,46 @@ exports.updatePatient = async (req, res) => {
       });
     }
 
-    // Update user info
-    await User.update(
-      { name, phone },
-      { where: { id: patient.userId } }
-    );
+    // Authorization check: Patient can only update their own profile
+    if (loggedInUser.role === 'patient' && patient.userId !== loggedInUser.id) {
+      return res.status(403).json({
+        success: false,
+        message: 'Unauthorized: You can only update your own patient profile.'
+      });
+    }
+
+    // Update User info
+    const userUpdateData = {};
+    if (firstName && lastName) {
+      userUpdateData.name = `${firstName} ${lastName}`;
+    } else if (firstName) {
+      userUpdateData.name = firstName;
+    }
+    // Don't allow changing email here, it should be a separate process if allowed
+    if (phone) {
+      userUpdateData.phone = phone;
+    }
+    // Only update if there's data to update
+    if (Object.keys(userUpdateData).length > 0) {
+      await User.update(userUpdateData, { where: { id: patient.userId } });
+    }
 
     // Update patient info
-    await patient.update({
-      dateOfBirth,
-      gender,
-      bloodGroup,
-      address,
-      emergencyContact,
-      medicalHistory,
-      allergies
-    });
+    const patientUpdateData = {};
+    if (dateOfBirth) patientUpdateData.dateOfBirth = dateOfBirth;
+    if (gender) patientUpdateData.gender = gender;
+    if (bloodGroup) patientUpdateData.bloodGroup = bloodGroup;
+    if (address) patientUpdateData.address = address;
+    if (emergencyContactName || emergencyContactPhone || emergencyContactRelation) {
+      patientUpdateData.emergencyContact = `${emergencyContactName || ''} - ${emergencyContactPhone || ''} - ${emergencyContactRelation || ''}`.trim().replace(/ - /g, ' ').replace(/\s+/g, ' ');
+    }
+    if (allergies) patientUpdateData.allergies = allergies;
+    if (chronicConditions) patientUpdateData.medicalHistory = chronicConditions; // Mapping chronicConditions to medicalHistory
+
+    // Only update if there's data to update
+    if (Object.keys(patientUpdateData).length > 0) {
+      await patient.update(patientUpdateData);
+    }
 
     const updatedPatient = await Patient.findByPk(id, {
       include: [{
@@ -178,14 +208,14 @@ exports.updatePatient = async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Patient updated successfully',
+      message: 'Patient profile updated successfully',
       data: updatedPatient
     });
   } catch (error) {
     console.error('Update patient error:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to update patient',
+      message: 'Failed to update patient profile',
       error: error.message
     });
   }

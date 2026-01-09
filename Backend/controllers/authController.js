@@ -39,26 +39,13 @@ exports.register = async (req, res) => {
       phone
     });
 
-    // Create role-specific profile
-    if (role === 'patient') {
-      await Patient.create({
-        userId: user.id,
-        dateOfBirth: additionalData.dateOfBirth,
-        gender: additionalData.gender,
-        bloodGroup: additionalData.bloodGroup,
-        address: additionalData.address,
-        emergencyContact: additionalData.emergencyContact
-      });
-    } else if (role === 'doctor') {
-      await Doctor.create({
-        userId: user.id,
-        specialization: additionalData.specialization,
-        qualification: additionalData.qualification,
-        experience: additionalData.experience || 0,
-        licenseNumber: additionalData.licenseNumber,
-        consultationFee: additionalData.consultationFee || 0
-      });
-    }
+    // Include role-specific profile in the response
+    const userWithProfile = await User.findByPk(user.id, {
+      include: [
+        { model: Patient, as: 'patientProfile' },
+        { model: Doctor, as: 'doctorProfile' }
+      ]
+    });
 
     // Generate token
     const token = generateToken(user);
@@ -67,7 +54,7 @@ exports.register = async (req, res) => {
       success: true,
       message: 'Registration successful',
       data: {
-        user,
+        user: userWithProfile,
         token
       }
     });
@@ -87,7 +74,13 @@ exports.login = async (req, res) => {
     const { email, password } = req.body;
 
     // Find user
-    const user = await User.findOne({ where: { email } });
+    const user = await User.findOne({
+      where: { email },
+      include: [
+        { model: Patient, as: 'patientProfile' },
+        { model: Doctor, as: 'doctorProfile' }
+      ]
+    });
     if (!user) {
       return res.status(401).json({
         success: false,

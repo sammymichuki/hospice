@@ -31,7 +31,10 @@ const Appointments = () => {
     if (user.role === 'admin') {
       fetchPatients();
     }
-  }, [pagination.page]);
+    if (user.role === 'patient' && user.patientProfile) {
+      setFormData((prev) => ({ ...prev, patientId: user.patientProfile.id }));
+    }
+  }, [pagination.page, user.role, user.id]);
 
   const fetchAppointments = async () => {
     try {
@@ -70,6 +73,7 @@ const Appointments = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      console.log('Appointments.jsx - formData before API call:', formData);
       await appointmentsAPI.create(formData);
       setShowModal(false);
       fetchAppointments();

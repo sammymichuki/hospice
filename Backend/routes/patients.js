@@ -33,7 +33,7 @@ router.post('/',
 // Update patient
 router.put('/:id', 
   authenticateToken, 
-  authorizeRole('admin', 'doctor', 'nurse'), 
+  authorizeRole('admin', 'doctor', 'nurse', 'patient'), 
   patientController.updatePatient
 );
 
