@@ -71,7 +71,7 @@ exports.register = async (req, res) => {
 // Login user
 exports.login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password,role } = req.body;
 
     // Find user
     const user = await User.findOne({
@@ -96,7 +96,11 @@ exports.login = async (req, res) => {
         message: 'Invalid email or password'
       });
     }
-
+    if (role && user.role !== role) {
+      return res.status(403).json({ 
+        success: false, message: 'Role mismatch'
+       });
+    }
     // Check if user is active
     if (user.status !== 'active') {
       return res.status(403).json({

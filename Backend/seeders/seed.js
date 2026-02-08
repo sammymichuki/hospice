@@ -1,5 +1,4 @@
 // backend/seeders/seed.js
-const bcrypt = require('bcryptjs');
 const { sequelize } = require('../config/database');
 const User = require('../models/User');
 const Patient = require('../models/Patient');
@@ -13,9 +12,6 @@ const seedDatabase = async () => {
   try {
     console.log('🌱 Starting database seeding...\n');
 
-    // Hash password for demo accounts
-    const hashedPassword = await bcrypt.hash('password123', 10);
-
     // ============================================
     // CREATE USERS
     // ============================================
@@ -24,7 +20,7 @@ const seedDatabase = async () => {
     const admin = await User.create({
       name: 'System Administrator',
       email: 'admin@hospital.com',
-      password: hashedPassword,
+      password: 'password123',
       role: 'admin',
       phone: '+1234567890',
       status: 'active'
@@ -34,7 +30,7 @@ const seedDatabase = async () => {
     const doctorUser1 = await User.create({
       name: 'Dr. Sarah Johnson',
       email: 'doctor@hospital.com',
-      password: hashedPassword,
+      password: 'password123',
       role: 'doctor',
       phone: '+1234567891',
       status: 'active'
@@ -44,7 +40,7 @@ const seedDatabase = async () => {
     const doctorUser2 = await User.create({
       name: 'Dr. Michael Brown',
       email: 'michael.brown@hospital.com',
-      password: hashedPassword,
+      password: 'password123',
       role: 'doctor',
       phone: '+1234567894',
       status: 'active'
@@ -54,7 +50,7 @@ const seedDatabase = async () => {
     const nurseUser = await User.create({
       name: 'Nurse Mary Smith',
       email: 'nurse@hospital.com',
-      password: hashedPassword,
+      password: 'password123',
       role: 'nurse',
       phone: '+1234567892',
       status: 'active'
@@ -64,7 +60,7 @@ const seedDatabase = async () => {
     const patientUser1 = await User.create({
       name: 'John Doe',
       email: 'patient@hospital.com',
-      password: hashedPassword,
+      password: 'password123',
       role: 'patient',
       phone: '+1234567893',
       status: 'active'
@@ -74,7 +70,7 @@ const seedDatabase = async () => {
     const patientUser2 = await User.create({
       name: 'Jane Smith',
       email: 'jane.smith@hospital.com',
-      password: hashedPassword,
+      password: 'password123',
       role: 'patient',
       phone: '+1234567895',
       status: 'active'
