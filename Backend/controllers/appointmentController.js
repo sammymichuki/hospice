@@ -129,8 +129,11 @@ exports.createAppointment = async (req, res) => {
     const { patientId, doctorId, appointmentDate, appointmentTime, type, reason } = req.body;
     console.log('createAppointment - Received patientId:', patientId);
 
-    // Check if patient exists
-    const patient = await Patient.findOne({ where: { userId: patientId } });
+    // Check if patient exists (accept patient profile id or user id)
+    let patient = await Patient.findByPk(patientId);
+    if (!patient) {
+      patient = await Patient.findOne({ where: { userId: patientId } });
+    }
     console.log('createAppointment - Found patient:', patient);
     if (!patient) {
       return res.status(404).json({
@@ -178,7 +181,7 @@ exports.createAppointment = async (req, res) => {
     // Create appointment
     const appointment = await Appointment.create({
       patientId: patient.id,
-      doctorId:
+      doctorId: doctor.id,
       appointmentDate,
       appointmentTime,
       type: type || 'consultation',
@@ -554,8 +557,11 @@ exports.createAppointment = async (req, res) => {
     const { patientId, doctorId, appointmentDate, appointmentTime, type, reason } = req.body;
     console.log('createAppointment - Received patientId:', patientId);
 
-    // Check if patient exists
-    const patient = await Patient.findOne({ where: { userId: patientId } });
+    // Check if patient exists (accept patient profile id or user id)
+    let patient = await Patient.findByPk(patientId);
+    if (!patient) {
+      patient = await Patient.findOne({ where: { userId: patientId } });
+    }
     console.log('createAppointment - Found patient:', patient);
     if (!patient) {
       return res.status(404).json({
@@ -603,7 +609,7 @@ exports.createAppointment = async (req, res) => {
     // Create appointment
     const appointment = await Appointment.create({
       patientId: patient.id,
-      doctorId:
+      doctorId: doctor.id,
       appointmentDate,
       appointmentTime,
       type: type || 'consultation',

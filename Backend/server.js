@@ -3,6 +3,7 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const { sequelize } = require('./config/database');
 
+
 // Load environment variables
 dotenv.config();
 
@@ -33,7 +34,6 @@ app.use('/api/appointments', appointmentRoutes);
 app.use('/api/records', recordRoutes);
 app.use('/api/bills', billRoutes);
 app.use('/api/inventory', inventoryRoutes);
-
 // Health check route
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'Hospital Management System API is running' });

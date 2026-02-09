@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { appointmentsAPI, patientsAPI } from '../services/api';
 
 const PatientProfilePage = () => {
   const { user, loading: authLoading } = useAuth();
@@ -28,29 +29,30 @@ const PatientProfilePage = () => {
   const [recentActivity, setRecentActivity] = useState([]);
   const [vitalSigns, setVitalSigns] = useState([]);
 
-  const API_URL = 'http://localhost:5000/api'; // Backend API URL
-
   useEffect(() => {
     if (!authLoading) {
       if (user && user.role === 'patient' && user.patientProfile) {
         setPatientId(user.patientProfile.id);
         fetchPatientData(user.patientProfile.id);
+        const nameParts = (user.name || '').trim().split(' ');
+        const firstName = nameParts[0] || '';
+        const lastName = nameParts.slice(1).join(' ') || '';
         setProfileData({
-          firstName: user.name || '',
-          lastName: '', // Assuming lastName is not directly in user object, will need to confirm backend
+          firstName,
+          lastName,
           email: user.email || '',
           phone: user.phone || '',
           dateOfBirth: user.patientProfile.dateOfBirth?.split('T')[0] || '',
           gender: user.patientProfile.gender || '',
           bloodGroup: user.patientProfile.bloodGroup || '',
           address: user.patientProfile.address || '',
-          emergencyContactName: user.patientProfile.emergencyContactName || '', // Assuming these fields
-          emergencyContactPhone: user.patientProfile.emergencyContactPhone || '', // exist in patientProfile
-          emergencyContactRelation: user.patientProfile.emergencyContactRelation || '', //
+          emergencyContactName: '',
+          emergencyContactPhone: '',
+          emergencyContactRelation: '',
           allergies: user.patientProfile.allergies || '',
-          chronicConditions: user.patientProfile.medicalHistory || '', // Assuming medicalHistory maps to chronicConditions
-          currentMedications: '', // Not directly available in current patientProfile, need to check backend
-          notes: '' // Not directly available
+          chronicConditions: user.patientProfile.medicalHistory || '',
+          currentMedications: '',
+          notes: ''
         });
       } else {
         setError('Patient profile not found or user is not a patient.');
@@ -62,62 +64,40 @@ const PatientProfilePage = () => {
   const fetchPatientData = async (id) => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      
-      const headers = {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      };
-
-      const [profileRes, statsRes, appointmentsRes, activityRes, vitalsRes] = await Promise.all([
-        fetch(`${API_URL}/patients/${id}`, { headers }),
-        fetch(`${API_URL}/patients/${id}/stats`, { headers }),
-        fetch(`${API_URL}/patients/${id}/appointments`, { headers }),
-        fetch(`${API_URL}/patients/${id}/activity`, { headers }),
-        fetch(`${API_URL}/patients/${id}/vitals`, { headers })
+      const [profileRes, appointmentsRes] = await Promise.all([
+        patientsAPI.getById(id),
+        appointmentsAPI.getAll({ patientId: id, limit: 5 })
       ]);
 
-      if (!profileRes.ok) throw new Error('Failed to fetch profile');
-      
-      const profile = await profileRes.json();
-      const stats = statsRes.ok ? await statsRes.json() : {};
-      const appointments = appointmentsRes.ok ? await appointmentsRes.json() : [];
-      const activity = activityRes.ok ? await activityRes.json() : [];
-      const vitals = vitalsRes.ok ? await vitalsRes.json() : [];
+      const profile = profileRes.data?.data;
+      if (!profile) throw new Error('Failed to fetch profile');
 
-      setProfileData({
-        firstName: profile.firstName || '',
-        lastName: profile.lastName || '',
-        email: profile.email || '',
-        phone: profile.phone || '',
+      const nameParts = (profile.user?.name || '').trim().split(' ');
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
+
+      setProfileData((prev) => ({
+        ...prev,
+        firstName,
+        lastName,
+        email: profile.user?.email || '',
+        phone: profile.user?.phone || '',
         dateOfBirth: profile.dateOfBirth?.split('T')[0] || '',
         gender: profile.gender || '',
         bloodGroup: profile.bloodGroup || '',
         address: profile.address || '',
-        city: profile.city || '',
-        state: profile.state || '',
-        zipCode: profile.zipCode || '',
-        emergencyContactName: profile.emergencyContactName || '',
-        emergencyContactPhone: profile.emergencyContactPhone || '',
-        emergencyContactRelation: profile.emergencyContactRelation || '',
-        insuranceProvider: profile.insuranceProvider || '',
-        insuranceId: profile.insuranceId || '',
         allergies: profile.allergies || '',
-        chronicConditions: profile.chronicConditions || '',
-        currentMedications: profile.currentMedications || '',
-        notes: profile.notes || ''
-      });
+        chronicConditions: profile.medicalHistory || ''
+      }));
 
-      setHealthStats([
-        { label: 'Total Visits', value: stats.totalVisits?.toString() || '0', icon: 'fa-hospital', color: 'blue' },
-        { label: 'Appointments', value: stats.appointments?.toString() || '0', icon: 'fa-calendar-check', color: 'green' },
-        { label: 'Prescriptions', value: stats.prescriptions?.toString() || '0', icon: 'fa-prescription-bottle', color: 'purple' },
-        { label: 'Lab Tests', value: stats.labTests?.toString() || '0', icon: 'fa-flask', color: 'orange' }
-      ]);
-
+      const appointments = appointmentsRes.data?.data?.appointments || [];
       setUpcomingAppointments(appointments);
-      setRecentActivity(activity);
-      setVitalSigns(vitals);
+      setHealthStats((prev) => prev.map((stat) => {
+        if (stat.label === 'Appointments') {
+          return { ...stat, value: appointments.length.toString() };
+        }
+        return stat;
+      }));
       setLoading(false);
     } catch (err) {
       setError(err.message);
@@ -128,18 +108,8 @@ const PatientProfilePage = () => {
   const handleSave = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      
-      const response = await fetch(`${API_URL}/patients/${patientId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(profileData)
-      });
-
-      if (!response.ok) throw new Error('Failed to update profile');
+      const response = await patientsAPI.update(patientId, profileData);
+      if (!response.data?.success) throw new Error('Failed to update profile');
 
       setIsEditing(false);
       setLoading(false);
